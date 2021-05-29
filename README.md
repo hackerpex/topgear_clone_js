@@ -1,2 +1,1 @@
-# topgear_clone_js
-clone dos games estilo top gear
+# a ideia é aprender as tecnicas que permitam recriar os algoritimos usados no game
