@@ -5,6 +5,9 @@
   var car_sprite = new Image(200, 100);
   var press = {}; 
   var release = {}; 
+  var speed;
+  var maxspeed = 60;
+  var airForce = 0.001;
 
  window.onload = function () {
 
@@ -55,7 +58,7 @@ function gameStart() {
 
     trackPosition = 1;
     centimetro = 0;
-    speed = 20
+    speed = 1
     frames = 0
     forca_g = 0;
   
@@ -67,6 +70,8 @@ function gameStart() {
   
      player = {
         position: 0,
+        acelerating: 0,
+        breaking: 0,
         direction: 0
     }
 
@@ -90,28 +95,48 @@ function gameStart() {
              player.direction = -1;
         },
         "ArrowUp": () => {
+           player.acelerating = 1.0;
            
         },
         "ArrowDown": () => {
-           
+            player.breaking = 1.0;
         }
     }
 
     release = {
         "ArrowRight": () => {
-            player.direction = 0;
+            if(player.direction > 0){
+                player.direction = 0;
+            }
+                
 
         },
         "ArrowLeft": () => {
-             player.direction = 0;
+            if(player.direction < 0){
+                player.direction = 0;
+            }
+
+             
         },
         "ArrowUp": () => {
-           
+            if(player.acelerating > 0){
+                player.acelerating = 0;
+            }
         },
         "ArrowDown": () => {
-           
+            if(player.breaking > 0){
+                player.breaking = 0;
+            }
         }
     }
+
+    var foo = new Sound("assets/music1.mp3", 100, true,"music");
+    foo.start();
+    
+    // foo.stop();
+    // foo.start();
+    //  foo.init(100, false);
+    // foo.remove();
 
 }
 
@@ -135,8 +160,45 @@ function gameStart() {
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(car_sprite, 200 * player.direction + 400 ,0,200,100, (winW/2)  - 150, winH - 280, 300, 150);
+    var curveAdd = 0;
+
+    if(trackData.curve > 0){
+        if(deslocamento > 100){
+            curveAdd = 200;
+        }
+        
+    }
+    if(trackData.curve < 0){
+        if(deslocamento < 100){
+            curveAdd = -200;
+        }
+        
+    }
+
+    if(player.direction > 0){
+        curveAdd += 200;
+    }
+    if(player.direction < 0){
+        curveAdd -= 200;
+    }
+
+    ctx.drawImage(car_sprite, 400 + curveAdd ,0,200,100, (winW/2)  - 150, winH - 280, 300, 150);
     
+
+ }
+
+ function renderHud(){
+
+    var kmh = Math.floor(speed * 3.6);
+    var mh = Math.floor(speed * 2.23694);
+
+    ctx.font = "30px Arial";
+    ctx.fillText("Speed:"+kmh +" km/h", 50, 50);
+
+    ctx.fillText("debug a:"+  trackData.curve  +" ", 50, 150);
+    ctx.fillText("debug b:"+  deslocamento  +" ", 50, 250);
+
+ 
 
  }
 
@@ -160,7 +222,7 @@ function gameStart() {
         ctx.fillStyle = rw[Math.floor((n + delta) % (size/2) / (colorMatch/2) )];
         st_left = trackCenter - (trackWidth+60) - (horizon - i*2.04)  ;
         st_rigth = winW - st_left * 2 ;
-       ctx.fillRect( st_left + n* deslocamento +player.position ,y, st_rigth  , 1);
+       ctx.fillRect( st_left + n * deslocamento +player.position ,y, st_rigth  , 1);
 
         ctx.fillStyle = lg[Math.floor((n + delta) % (size/2) / (colorMatch/2) )];
          st_left = trackCenter - (trackWidth) - (horizon - i*1.9)  ;
@@ -197,9 +259,11 @@ function gameStart() {
 
     calculatePosition();
     calculateCurve();
+    calculateSpeed();
 
     renderTrack();
     renderPlayer();
+    renderHud();
    
     // console.log("n:"+ n);
 
@@ -222,27 +286,43 @@ function gameStart() {
         
         forca_g = trackData.curve * speed;
 
-        if (trackData.curve > 0){
-            deslocamento += 0.01;
-            if (deslocamento > trackData.curve ){
-                deslocamento = trackData.curve;
+        if (trackData.curve < 0){
+            
+            deslocamento -= 0.005;
+            if (deslocamento < trackData.curve ){
+                deslocamento += 0.005;
             }
             
     
-        }
-        if (trackData.curve < 0){
-            deslocamento -= 0.01;
-            if (deslocamento < trackData.curve ){
-                deslocamento = trackData.curve;
+        } 
+
+        if (trackData.curve > 0){
+            
+            deslocamento += 0.005;
+            if (deslocamento > trackData.curve ){
+                deslocamento -= 0.005;
             }
             
-        }
-        if (trackData.curve == 0){
-            if (deslocamento > 0){
-                deslocamento -= 0.01;
-            }
+    
+        } 
+        // if (trackData.curve < 0){
+        //     deslocamento += -0.003;
+        //     if (deslocamento < trackData.curve ){
+        //         deslocamento += 0.003;
+        //     }
+            
+        // }
+        if (trackData.curve == 0)
+        {
             if (deslocamento < 0){
-                deslocamento += 0.01;
+                deslocamento += 0.005;
+            }
+            else
+            if (deslocamento > 0){
+                deslocamento += -0.005;
+            }
+            else{
+
             }
         }
     
@@ -250,36 +330,54 @@ function gameStart() {
         if (deslocamento < -1.0 ){
             deslocamento = -1.0;
         }
+        else
         if (deslocamento > 1.0){
             deslocamento = 1.0;
         }
     }
 
     function calculatePosition(){
+
+        ls = Math.log(maxspeed  - speed);
+
         if (player.direction > 0){
-            player.position -= 20 ;
+            player.position -= (maxspeed * 1.4  - speed) /4;
         }
         if (player.direction < 0){
-            player.position += 20 ;
+            player.position +=( maxspeed * 1.4 - speed)  /4;
         }
-        player.position +=  forca_g;
+
         
-        // if (player.direction == 0){
-        //     if (player.position > 0){
-        //         player.position -= 10;
-        //     }
-        //     if (player.position < 0){
-        //         player.position += 10;
-        //     }
-        // }
+
+        player.position +=  forca_g/2;
+
+        if(player.position > 800 ){
+            player.position = 800;
+        }
+        if(player.position < -800 ){
+            player.position = -800;
+        }
     
-       
-        // if (deslocamento < -1.0 ){
-        //     deslocamento = -1.0;
-        // }
-        // if (deslocamento > 1.0){
-        //     deslocamento = 1.0;
-        // }
+    }
+
+    function calculateSpeed(){
+        if (player.acelerating > 0){
+           if(speed < maxspeed){
+               ls = Math.log(maxspeed * 3 - speed);
+               speed = speed + ( ls/20);
+           }
+        }
+        if (player.breaking > 0){
+            if(speed > 0){
+                speed = speed * 0.96;
+            }
+         }
+        
+         speed =  speed * 0.995;
+        if (speed < 0) {
+            speed = 0;
+        }
+    
     }
 
 
