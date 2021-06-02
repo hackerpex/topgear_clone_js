@@ -3,10 +3,12 @@
 
   var deslocamento = 0.0;
   var car_sprite = new Image(200, 100);
+  var sprite_1 = new Image(100, 50);//placa_left
+  var sprite_2 = new Image(100, 50);//placa_right
   var press = {}; 
   var release = {}; 
   var speed;
-  var maxspeed = 60;
+  var maxspeed = 40;
   var airForce = 0.001;
 
  window.onload = function () {
@@ -74,16 +76,21 @@ function gameStart() {
         breaking: 0,
         direction: 0
     }
+    game ={
+        paused:false
+    }
 
 
      grama_colors = ["#00AA00", "#00FF00"]; // verde escuro / verde claro
      rw = ["#FF0000", "#FFFFFF"]; // vermelho / branco
      lg = ["#AAAAAA", "#777777"]; // cinza claro / cinza escuro
 
-     car_sprite.onload = renderPlayer; // Draw when image has loaded
+    //  car_sprite.onload = renderPlayer; // Draw when image has loaded
 
      // Load an image of intrinsic size 300x227 in CSS pixels
      car_sprite.src = './assets/car1.png';
+     sprite_1.src = './assets/placa_left.png';
+     sprite_2.src = './assets/placa_right.png';
 
 
     press = {
@@ -100,6 +107,9 @@ function gameStart() {
         },
         "ArrowDown": () => {
             player.breaking = 1.0;
+        },
+        "Enter": () => {
+            game.paused = !game.paused;
         }
     }
 
@@ -108,7 +118,7 @@ function gameStart() {
             if(player.direction > 0){
                 player.direction = 0;
             }
-                
+           
 
         },
         "ArrowLeft": () => {
@@ -128,15 +138,13 @@ function gameStart() {
                 player.breaking = 0;
             }
         }
+       
     }
 
-    var foo = new Sound("assets/music1.mp3", 100, true,"music");
-    foo.start();
+    var music = new Sound("assets/music1.mp3", 100, true,"music");
+    // music.start();
     
-    // foo.stop();
-    // foo.start();
-    //  foo.init(100, false);
-    // foo.remove();
+  
 
 }
 
@@ -187,6 +195,8 @@ function gameStart() {
 
  }
 
+ 
+
  function renderHud(){
 
     var kmh = Math.floor(speed * 3.6);
@@ -195,17 +205,24 @@ function gameStart() {
     ctx.font = "30px Arial";
     ctx.fillText("Speed:"+kmh +" km/h", 50, 50);
 
-    ctx.fillText("debug a:"+  trackData.curve  +" ", 50, 150);
-    ctx.fillText("debug b:"+  deslocamento  +" ", 50, 250);
+    ctx.fillText("debug a:"+  speed  +" ", 50, 150);
+    ctx.fillText("debug b:"+  Math.floor(delta)  +" ", 50, 250);
 
  
 
  }
 
  function renderTrack(){
-    for (let i = 0; i < horizon; i++) {
+
+
+
+     deslocamento =Math.round(deslocamento * 1000) / 1000
+
+     lastObjPos = delta;
+     
+    for (let i = 0; i <= horizon; i++) {
         //  let n = i * Math.log((horizon - i )/ 100)
-         let n = (i * Math.log((horizon - i ) / horizon))*-1
+         let n = (i * Math.log((horizon - i ) / horizon))*-1 ;
         
         let size = 600;
         let colorMatch = 300;
@@ -229,12 +246,79 @@ function gameStart() {
          st_rigth = winW - st_left * 2 ;
         ctx.fillRect( st_left + n* deslocamento +player.position ,y, st_rigth  , 1);
 
+        
+       
+       
+        
+    }
+
+    var x = 1;
+    for (let i = horizon; i >= 0; i--) {
+        //  let n = i * Math.log((horizon - i )/ 100)
+        let n = (i * Math.log((horizon - i ) / horizon))*-1 ;
+        let nx = (x * Math.log((x ) / horizon)) *-1 ;
+        
+        y = winH  - i;
+        
+        var trackCenter = winW/2;
+
+        let trackWidth = 400;
+        st_left = trackCenter - (trackWidth+60) - (horizon - i*2.04)  ;
+        st_rigth = winW - st_left * 2 ;
+        hi = horizon - i;
+        
+        var poscheck = Math.round((delta + n) * 1000) / 1000;
+        var indice = delta + nx;
+        if(poscheck != Infinity){
+            var mc = Math.ceil(poscheck)   % 30 ;
+            if( mc  > 0 && mc < 30 && indice > lastObjPos + 5 ){
+            
+                if(deslocamento > 0.1){
+                  //  ctx.drawImage( sprite_2,  st_left + n * deslocamento +player.position     ,y - (horizon -i), (horizon -i) ,(horizon - i));
+                }
+                if(deslocamento < -0.1){
+                 //   ctx.drawImage( sprite_1,  st_left + n * deslocamento + player.position  + st_rigth    ,y - (horizon -i), (horizon -i) ,(horizon - i));
+                }
+           lastObjPos = indice;
    
+           }
+        }
+       x++;
+        
     }
 
  }
+ function getTrackDataForPosition(pos){
+
+    objects =[
+        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
+        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]}
+
+    ];
+    return objects
+ }
+
+ function renderObjects(){
+
+    objs = getTrackDataForPosition(1);
+    for (let i = 0; i < horizon; i++) {
+        
+
+    }
+ }
 
  function render() {
+     if (game.paused){
+         return;
+     }
     ctx.fillStyle = "#3333FF";
     ctx.fillRect(0, 0, winW, winH);
 
@@ -262,13 +346,17 @@ function gameStart() {
     calculateSpeed();
 
     renderTrack();
+
+    renderObjects();
+
+
     renderPlayer();
     renderHud();
    
     // console.log("n:"+ n);
 
     // Avança pela pista (nesse exemplo, na velocidade do render; na prática, usar o tempo)
-    delta += speed;
+    delta += speed  ;
 
     centimetro += speed;
 
@@ -292,6 +380,7 @@ function gameStart() {
             if (deslocamento < trackData.curve ){
                 deslocamento += 0.005;
             }
+              speed += trackData.curve/30;
             
     
         } 
@@ -302,7 +391,7 @@ function gameStart() {
             if (deslocamento > trackData.curve ){
                 deslocamento -= 0.005;
             }
-            
+              speed -=  trackData.curve/30;
     
         } 
         // if (trackData.curve < 0){
@@ -378,6 +467,9 @@ function gameStart() {
             speed = 0;
         }
     
+        if(speed > maxspeed){
+            speed = maxspeed;
+        }
     }
 
 
