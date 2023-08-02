@@ -7,9 +7,13 @@
   var sprite_2 = new Image(100, 50);//placa_right
   var press = {}; 
   var release = {}; 
-  var speed;
-  var maxspeed = 40;
-  var airForce = 0.001;
+  var speed; //metros por segundo
+  var maxspeed =33.33; //metros por segundo
+  var airForce = 0.0001;
+  var print =0;
+  var increment = 0;
+  var distancia_em_metros;
+
 
  window.onload = function () {
 
@@ -67,7 +71,7 @@ function gameStart() {
 
     altura = 30;
     alturaD = 1;
-    delta = 0;
+    distancia = 0;
   
   
      player = {
@@ -84,6 +88,7 @@ function gameStart() {
      grama_colors = ["#00AA00", "#00FF00"]; // verde escuro / verde claro
      rw = ["#FF0000", "#FFFFFF"]; // vermelho / branco
      lg = ["#AAAAAA", "#777777"]; // cinza claro / cinza escuro
+     bw = ["#FFFFFF", "#000000"]; // cinza claro / cinza escuro
 
     //  car_sprite.onload = renderPlayer; // Draw when image has loaded
 
@@ -106,10 +111,14 @@ function gameStart() {
            
         },
         "ArrowDown": () => {
-            player.breaking = 1.0;
+            player.breaking = 0.95;
         },
         "Enter": () => {
             game.paused = !game.paused;
+        }
+        ,
+        " ": () => {
+            player.breaking = 0.99;
         }
     }
 
@@ -137,6 +146,11 @@ function gameStart() {
             if(player.breaking > 0){
                 player.breaking = 0;
             }
+        },
+        " ": () => {
+            if(player.breaking > 0){
+                player.breaking = 0;
+            }
         }
        
     }
@@ -158,6 +172,8 @@ function gameStart() {
         }
 
         //   speed += 0.01;
+
+        distancia_em_metros = Math.floor(distancia / 33)
 
         render();
         update()
@@ -206,7 +222,7 @@ function gameStart() {
     ctx.fillText("Speed:"+kmh +" km/h", 50, 50);
 
     ctx.fillText("debug a:"+  speed  +" ", 50, 150);
-    ctx.fillText("debug b:"+  Math.floor(delta)  +" ", 50, 250);
+    ctx.fillText("debug b:"+  distancia_em_metros  +" metros ", 50, 250);
 
  
 
@@ -216,32 +232,73 @@ function gameStart() {
 
 
 
+    deslocamento =Math.round(deslocamento * 1000) / 1000
+
+    lastObjPos = distancia;
+
+    let trackWidth = 400;
+    
+   for (let i = 0; i <= horizon; i++) {
+       //  let n = i * Math.log((horizon - i )/ 100)
+       //  let n = (i * Math.log((horizon - i ) / horizon))*-1 ;
+        let n = (100* Math.log(horizon - i))*-1  ;
+       let size = 200;
+       let colorMatch = 100;
+       
+       y = winH  - i;
+       
+       ctx.fillStyle = grama_colors[Math.floor((n + distancia) % size / colorMatch)];
+       ctx.fillRect(0, y, winW, 1);
+       
+       var trackCenter = winW/2;
+
+       ctx.fillStyle = rw[Math.floor((n + distancia) % (size/2) / (colorMatch/2) )];
+       st_left = trackCenter - (trackWidth+60) - (horizon - i*2.04)  ;
+       st_rigth = winW - st_left * 2 ;
+      ctx.fillRect( st_left + n * deslocamento +player.position ,y, st_rigth  , 1);
+
+       ctx.fillStyle = lg[Math.floor((n + distancia) % (size/2) / (colorMatch/2) )];
+        st_left = trackCenter - (trackWidth) - (horizon - i*1.9)  ;
+        st_rigth = winW - st_left * 2 ;
+       ctx.fillRect( st_left + n* deslocamento +player.position ,y, st_rigth  , 1);
+
+
+    }
+
+}
+
+ function renderSigns(){
+
+
+
      deslocamento =Math.round(deslocamento * 1000) / 1000
 
-     lastObjPos = delta;
+     lastObjPos = distancia;
+
+     let trackWidth = 400;
      
     for (let i = 0; i <= horizon; i++) {
         //  let n = i * Math.log((horizon - i )/ 100)
-         let n = (i * Math.log((horizon - i ) / horizon))*-1 ;
-        
-        let size = 600;
-        let colorMatch = 300;
+        //  let n = (i * Math.log((horizon - i ) / horizon))*-1 ;
+         let n = (100* Math.log(horizon - i))*-1  ;
+        let size = 200;
+        let colorMatch = 100;
         
         y = winH  - i;
         
-        ctx.fillStyle = grama_colors[Math.floor((n + delta) % size / colorMatch)];
+        ctx.fillStyle = grama_colors[Math.floor((n + distancia) % size / colorMatch)];
         ctx.fillRect(0, y, winW, 1);
         
         var trackCenter = winW/2;
         // trackCenter += player.position;
-        let trackWidth = 400;
+       
 
-        ctx.fillStyle = rw[Math.floor((n + delta) % (size/2) / (colorMatch/2) )];
+        ctx.fillStyle = rw[Math.floor((n + distancia) % (size/2) / (colorMatch/2) )];
         st_left = trackCenter - (trackWidth+60) - (horizon - i*2.04)  ;
         st_rigth = winW - st_left * 2 ;
        ctx.fillRect( st_left + n * deslocamento +player.position ,y, st_rigth  , 1);
 
-        ctx.fillStyle = lg[Math.floor((n + delta) % (size/2) / (colorMatch/2) )];
+        ctx.fillStyle = lg[Math.floor((n + distancia) % (size/2) / (colorMatch/2) )];
          st_left = trackCenter - (trackWidth) - (horizon - i*1.9)  ;
          st_rigth = winW - st_left * 2 ;
         ctx.fillRect( st_left + n* deslocamento +player.position ,y, st_rigth  , 1);
@@ -250,65 +307,92 @@ function gameStart() {
        
        
         
-    }
+     }
 
     var x = 1;
-    for (let i = horizon; i >= 0; i--) {
+    let pos =  2300;
+    let xp =  5300 ;
+
+    for (let i = 0; i <= horizon; i++) {
         //  let n = i * Math.log((horizon - i )/ 100)
-        let n = (i * Math.log((horizon - i ) / horizon))*-1 ;
-        let nx = (x * Math.log((x ) / horizon)) *-1 ;
+        //  let n = (i * Math.log((horizon - i ) / horizon))*-1 ;
+         let n = (100* Math.log(horizon - i))*-1  ;
         
         y = winH  - i;
         
-        var trackCenter = winW/2;
-
-        let trackWidth = 400;
-        st_left = trackCenter - (trackWidth+60) - (horizon - i*2.04)  ;
+      
+        st_left = trackCenter - (trackWidth) - (horizon - i*1.9)  ;
         st_rigth = winW - st_left * 2 ;
-        hi = horizon - i;
-        
-        var poscheck = Math.round((delta + n) * 1000) / 1000;
-        var indice = delta + nx;
-        if(poscheck != Infinity){
-            var mc = Math.ceil(poscheck)   % 30 ;
-            if( mc  > 0 && mc < 30 && indice > lastObjPos + 5 ){
-            
-                if(deslocamento > 0.1){
-                  //  ctx.drawImage( sprite_2,  st_left + n * deslocamento +player.position     ,y - (horizon -i), (horizon -i) ,(horizon - i));
-                }
-                if(deslocamento < -0.1){
-                 //   ctx.drawImage( sprite_1,  st_left + n * deslocamento + player.position  + st_rigth    ,y - (horizon -i), (horizon -i) ,(horizon - i));
-                }
-           lastObjPos = indice;
-   
-           }
+         
+        if (Math.floor(n + distancia) % 100 in [0] ){
+      
+               ctx.drawImage( sprite_2, st_left + n* deslocamento +player.position     ,y - (horizon -i), (horizon -i) ,(horizon - i));
         }
-       x++;
-        
     }
+       
+ 
+//     for (let i = horizon; i >= 0; i--) {
+//         //  let n = i * Math.log((horizon - i )/ 100)
+//         let n = (100* Math.log(horizon - i))*-1 ;
+        
+//         let nx = (x * Math.log((x ) / horizon)) *-1 ;
+        
+//         y = winH  - i;
+        
+//         var trackCenter = winW/2;
+
+//         let trackWidth = 400;
+//         st_left = trackCenter - (trackWidth+60) - (horizon - i*2.04)  ;
+//         st_rigth = winW - st_left * 2 ;
+//         hi = horizon - i;
+//         if (Math.floor(n + distancia) % 100 == 0 ){
+//             print = i;
+//              ctx.drawImage( sprite_2,  st_left + n * deslocamento +player.position     ,y - (horizon -i), (horizon -i) ,(horizon - i));
+//         }
+
+
+
+//         ctx.fillStyle = bw[0];
+//         ctx.fillRect(i,n,  1 , 1);
+
+
+// // if (pos >= 400 && pos <= 402){
+//         //     ctx.drawImage( sprite_2,  st_left + n * deslocamento +player.position     ,y - (horizon -i), (horizon -i) ,(horizon - i));
+//         // }
+//         // if (pos >= 1400 && pos <= 1402){
+//         //     ctx.drawImage( sprite_2,  st_left + n * deslocamento +player.position     ,y - (horizon -i), (horizon -i) ,(horizon - i));
+//         // }
+//                 // if(deslocamento > 0.1){
+//                 //     ctx.drawImage( sprite_2,  st_left + n * deslocamento +player.position     ,y - (horizon -i), (horizon -i) ,(horizon - i));
+//                 // }
+//                 // if(deslocamento < -0.1){
+//                 //     ctx.drawImage( sprite_1,  st_left + n * deslocamento + player.position  + st_rigth    ,y - (horizon -i), (horizon -i) ,(horizon - i));
+//                 // }
+           
+//                 x++;
+        
+//     }
+
+
+
 
  }
- function getTrackDataForPosition(pos){
+ function getTrackDataForPosition(){
 
-    objects =[
-        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 1, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]},
-        { numero:1, curve:-0.3, l_obs: 0, r_obs: 0, track_colors: ["#AAAAAA", "#777777"], limit_colors:["#FF0000", "#FFFFFF"] ,out_colors: ["#00AA00", "#00FF00"]}
+    var pista_trecho = new Array();
+    for (let i = 0; i < 100; i++) {
+        trackPosition =  (distancia_em_metros + i) % pista.length ; 
+        trackData = pista[trackPosition ];
+        pista_trecho.push(trackData);
+    }
 
-    ];
-    return objects
+  
+    return pista_trecho
  }
 
  function renderObjects(){
 
-    objs = getTrackDataForPosition(1);
+    objs = getTrackDataForPosition();
     for (let i = 0; i < horizon; i++) {
         
 
@@ -322,7 +406,9 @@ function gameStart() {
     ctx.fillStyle = "#3333FF";
     ctx.fillRect(0, 0, winW, winH);
 
-    trackData = pista[trackPosition];
+    trackPosition =  distancia_em_metros % pista.length ; 
+    console.log("track-position:"+trackPosition);
+    trackData = pista[trackPosition ];
 
     if(centimetro == 0){
         // console.log(trackData.numero);
@@ -356,9 +442,9 @@ function gameStart() {
     // console.log("n:"+ n);
 
     // Avança pela pista (nesse exemplo, na velocidade do render; na prática, usar o tempo)
-    delta += speed  ;
+    distancia += speed/2.5;
 
-    centimetro += speed;
+    centimetro += speed/2.5;
 
     frames++;
 
@@ -371,58 +457,54 @@ function gameStart() {
     }
 
     function calculateCurve(){
+
         
-        forca_g = trackData.curve * speed;
+        // curve = trackData.curve/90;
+        // forca_g = curve * speed;
 
-        if (trackData.curve < 0){
+        // if (curve < 0){
             
-            deslocamento -= 0.005;
-            if (deslocamento < trackData.curve ){
-                deslocamento += 0.005;
-            }
-              speed += trackData.curve/30;
-            
-    
-        } 
-
-        if (trackData.curve > 0){
-            
-            deslocamento += 0.005;
-            if (deslocamento > trackData.curve ){
-                deslocamento -= 0.005;
-            }
-              speed -=  trackData.curve/30;
-    
-        } 
-        // if (trackData.curve < 0){
-        //     deslocamento += -0.003;
-        //     if (deslocamento < trackData.curve ){
-        //         deslocamento += 0.003;
+        //     deslocamento -= 0.005;
+        //     if (deslocamento < curve ){
+        //         deslocamento += 0.005;
         //     }
+        //       speed += curve/30;
             
-        // }
-        if (trackData.curve == 0)
-        {
-            if (deslocamento < 0){
-                deslocamento += 0.005;
-            }
-            else
-            if (deslocamento > 0){
-                deslocamento += -0.005;
-            }
-            else{
+    
+        // } 
 
-            }
-        }
+        // if (curve > 0){
+            
+        //     deslocamento += 0.005;
+        //     if (deslocamento > curve ){
+        //         deslocamento -= 0.005;
+        //     }
+        //       speed -=  curve/30;
+    
+        // } 
+       
+        // if (curve == 0)
+        // {
+        //     if (deslocamento < 0){
+        //         deslocamento += 0.005;
+        //     }
+        //     else
+        //     if (deslocamento > 0){
+        //         deslocamento += -0.005;
+        //     }
+        //     else{
+
+        //     }
+        // }
     
        
-        if (deslocamento < -1.0 ){
-            deslocamento = -1.0;
-        }
-        else
-        if (deslocamento > 1.0){
-            deslocamento = 1.0;
-        }
+        // if (deslocamento < -1.0 ){
+        //     deslocamento = -1.0;
+        // }
+        // else
+        // if (deslocamento > 1.0){
+        //     deslocamento = 1.0;
+        // }
     }
 
     function calculatePosition(){
@@ -450,15 +532,17 @@ function gameStart() {
     }
 
     function calculateSpeed(){
+        increment = 0;
         if (player.acelerating > 0){
            if(speed < maxspeed){
-               ls = Math.log(maxspeed * 3 - speed);
-               speed = speed + ( ls/20);
+               ls = Math.log(1+speed)/10;
+                increment = speed + ls ;
+                speed = 0.0001 + increment;
            }
         }
         if (player.breaking > 0){
             if(speed > 0){
-                speed = speed * 0.96;
+                speed = speed * player.breaking;
             }
          }
         
